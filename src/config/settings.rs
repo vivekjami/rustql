@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use config::{Config, ConfigError, Environment, File};
 use serde::{Deserialize, Serialize};
@@ -64,6 +63,7 @@ pub struct MetricsConfig {
     pub enabled: bool,
     pub prometheus_port: u16,
     pub tracing_enabled: bool,
+    pub tracing_enabled: bool,
 }
 
 impl Settings {
@@ -72,7 +72,7 @@ impl Settings {
             .add_source(File::with_name(config_path).required(false))
             .add_source(Environment::with_prefix("RUSTQL"))
             .build()?;
-        
+
         s.try_deserialize()
     }
 }

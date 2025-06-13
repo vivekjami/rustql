@@ -1,4 +1,3 @@
-
 [server]
 host = "0.0.0.0"
 port = 5000
@@ -19,18 +18,12 @@ algorithm = "sliding_window"
 
 [security]
 cors_origins = ["*"]
-enable_introspection = true
+jwt_secret = "your-secret-key"
 
-[metrics]
-enabled = true
-prometheus_port = 9090
-tracing_enabled = true
-
-[[apis.rest]]
+[[apis]]
 name = "jsonplaceholder"
 base_url = "https://jsonplaceholder.typicode.com"
-schema_url = "https://jsonplaceholder.typicode.com/swagger.json"
 
-[[apis.rest]]
+[[apis]]
 name = "example"
 base_url = "https://api.example.com/v1"

@@ -1,19 +1,18 @@
 
-use crate::config::Settings;
-use crate::error::Result;
-use crate::server::handlers;
 use axum::{
     routing::{get, post},
     Router,
+    Extension,
 };
+use crate::server::handlers::{root, health_check, graphql_handler, metrics};
+use crate::graphql::{playground, AppSchema};
 
-pub async fn create_routes(settings: Settings) -> Result<Router> {
-    let router = Router::new()
-        .route("/", get(handlers::root))
-        .route("/health", get(handlers::health_check))
-        .route("/graphql", post(handlers::graphql_handler))
-        .route("/graphql", get(handlers::graphql_playground))
-        .route("/metrics", get(handlers::metrics));
-    
-    Ok(router)
+pub fn create_router(schema: AppSchema) -> Router {
+    Router::new()
+        .route("/", get(root))
+        .route("/health", get(health_check))
+        .route("/graphql", post(graphql_handler))
+        .route("/playground", get(playground::playground))
+        .route("/metrics", get(metrics))
+        .layer(Extension(schema))
 }

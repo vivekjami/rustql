@@ -1,17 +1,17 @@
 
-pub mod handlers;
-pub mod middleware;
-pub mod routes;
-pub mod websocket;
+use axum::Router;
+use std::net::SocketAddr;
+use tokio::net::TcpListener;
+use tracing::info;
 
 use crate::config::Settings;
 use crate::error::Result;
-use axum::{Router, Server as AxumServer};
-use std::net::SocketAddr;
-use tower::ServiceBuilder;
-use tower_http::cors::CorsLayer;
-use tower_http::trace::TraceLayer;
-use tracing::info;
+use crate::graphql::create_schema;
+use crate::rest::RestClient;
+
+pub mod handlers;
+pub mod middleware;
+pub mod routes;
 
 pub struct Server {
     app: Router,
@@ -20,25 +20,34 @@ pub struct Server {
 
 impl Server {
     pub async fn new(settings: Settings) -> Result<Self> {
-        let addr = format!("{}:{}", settings.server.host, settings.server.port)
-            .parse::<SocketAddr>()?;
+        // Create REST client
+        let mut rest_client = RestClient::new();
         
-        let app = routes::create_routes(settings).await?
-            .layer(
-                ServiceBuilder::new()
-                    .layer(TraceLayer::new_for_http())
-                    .layer(CorsLayer::permissive())
-            );
+        // Add configured APIs
+        for api in &settings.apis {
+            rest_client.add_api(api.name.clone(), api.base_url.clone());
+        }
+        
+        // Create GraphQL schema
+        let schema = create_schema(rest_client);
+        
+        // Create router
+        let app = routes::create_router(schema);
+        
+        let addr = SocketAddr::from(([0, 0, 0, 0], settings.server.port));
         
         Ok(Self { app, addr })
     }
     
     pub async fn run(self) -> Result<()> {
-        info!("Server starting on {}", self.addr);
+        info!("🚀 RustQL server starting on {}", self.addr);
         
-        AxumServer::bind(&self.addr)
-            .serve(self.app.into_make_service())
-            .await?;
+        let listener = TcpListener::bind(self.addr).await?;
+        
+        info!("✅ Server running at http://{}", self.addr);
+        info!("📊 GraphQL Playground available at http://{}/playground", self.addr);
+        
+        axum::serve(listener, self.app).await?;
         
         Ok(())
     }
