@@ -11,4 +11,12 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
+args = "source ~/.cargo/env"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
 args = "cargo run --release"
+
+[deployment]
+run = ["sh", "-c", "cargo run --release"]
+build = ["sh", "-c", "cargo build --release"]

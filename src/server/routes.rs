@@ -4,15 +4,17 @@ use axum::{
     Router,
     Extension,
 };
-use crate::server::handlers::{root, health_check, graphql_handler, metrics};
-use crate::graphql::{playground, AppSchema};
+use tower_http::cors::CorsLayer;
+use crate::graphql::AppSchema;
+use crate::server::handlers;
 
 pub fn create_router(schema: AppSchema) -> Router {
     Router::new()
-        .route("/", get(root))
-        .route("/health", get(health_check))
-        .route("/graphql", post(graphql_handler))
-        .route("/playground", get(playground::playground))
-        .route("/metrics", get(metrics))
+        .route("/", get(handlers::root))
+        .route("/health", get(handlers::health_check))
+        .route("/graphql", post(handlers::graphql_handler))
+        .route("/playground", get(handlers::graphql_playground))
+        .route("/metrics", get(handlers::metrics))
         .layer(Extension(schema))
+        .layer(CorsLayer::permissive())
 }
