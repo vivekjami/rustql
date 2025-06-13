@@ -13,6 +13,20 @@ pub struct RestClient {
     timeout: Duration,
 }
 
+use reqwest::{Client, Method, Response};
+use serde_json::Value;
+use std::collections::HashMap;
+use std::time::Duration;
+use tokio::time::timeout;
+use crate::error::Result;
+
+#[derive(Debug)]
+pub struct RestClient {
+    client: Client,
+    apis: HashMap<String, String>,
+    timeout: Duration,
+}
+
 impl RestClient {
     pub fn new() -> Self {
         let client = Client::builder()

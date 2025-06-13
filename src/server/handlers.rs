@@ -51,6 +51,12 @@ pub async fn metrics() -> Json<Value> {
 
 use axum::response::Html;
 
+pub async fn playground() -> Html<&'static str> {
+    Html(async_graphql::http::playground_source(
+        async_graphql::http::GraphQLPlaygroundConfig::new("/graphql")
+    ))
+}
+
 pub async fn graphql_playground() -> Html<String> {
     Html(
         r#"

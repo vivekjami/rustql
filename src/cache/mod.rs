@@ -2,34 +2,34 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use std::time::{SystemTime, Duration};
 use serde_json::Value;
+use std::time::{Duration, Instant};
 
 #[derive(Clone)]
-pub struct CacheItem {
-    value: Value,
-    expires_at: SystemTime,
-}
-
-#[derive(Clone)]
-pub struct MemoryCache {
-    store: Arc<RwLock<HashMap<String, CacheItem>>>,
+pub struct CacheManager {
+    store: Arc<RwLock<HashMap<String, CacheEntry>>>,
     default_ttl: Duration,
 }
 
-impl MemoryCache {
-    pub fn new(default_ttl: Duration) -> Self {
+#[derive(Clone)]
+struct CacheEntry {
+    value: Value,
+    expires_at: Instant,
+}
+
+impl CacheManager {
+    pub fn new(default_ttl_secs: u64) -> Self {
         Self {
             store: Arc::new(RwLock::new(HashMap::new())),
-            default_ttl,
+            default_ttl: Duration::from_secs(default_ttl_secs),
         }
     }
     
     pub async fn get(&self, key: &str) -> Option<Value> {
         let store = self.store.read().await;
-        if let Some(item) = store.get(key) {
-            if SystemTime::now() < item.expires_at {
-                Some(item.value.clone())
+        if let Some(entry) = store.get(key) {
+            if entry.expires_at > Instant::now() {
+                Some(entry.value.clone())
             } else {
                 None
             }
@@ -39,22 +39,16 @@ impl MemoryCache {
     }
     
     pub async fn set(&self, key: String, value: Value, ttl: Option<Duration>) {
-        let ttl = ttl.unwrap_or(self.default_ttl);
-        let expires_at = SystemTime::now() + ttl;
+        let expires_at = Instant::now() + ttl.unwrap_or(self.default_ttl);
+        let entry = CacheEntry { value, expires_at };
         
-        let item = CacheItem { value, expires_at };
         let mut store = self.store.write().await;
-        store.insert(key, item);
+        store.insert(key, entry);
     }
     
-    pub async fn delete(&self, key: &str) {
+    pub async fn clear_expired(&self) {
         let mut store = self.store.write().await;
-        store.remove(key);
-    }
-    
-    pub async fn cleanup_expired(&self) {
-        let mut store = self.store.write().await;
-        let now = SystemTime::now();
-        store.retain(|_, item| now < item.expires_at);
+        let now = Instant::now();
+        store.retain(|_, entry| entry.expires_at > now);
     }
 }

@@ -2,49 +2,50 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use std::time::{SystemTime, Duration};
+use std::time::{Duration, Instant};
 
 #[derive(Clone)]
 pub struct RateLimiter {
-    limits: Arc<RwLock<HashMap<String, Vec<SystemTime>>>>,
-    max_requests: usize,
-    window: Duration,
+    store: Arc<RwLock<HashMap<String, RateLimitEntry>>>,
+    requests_per_minute: u32,
+    window_size: Duration,
+}
+
+#[derive(Clone)]
+struct RateLimitEntry {
+    count: u32,
+    window_start: Instant,
 }
 
 impl RateLimiter {
-    pub fn new(max_requests: usize, window: Duration) -> Self {
+    pub fn new(requests_per_minute: u32) -> Self {
         Self {
-            limits: Arc::new(RwLock::new(HashMap::new())),
-            max_requests,
-            window,
+            store: Arc::new(RwLock::new(HashMap::new())),
+            requests_per_minute,
+            window_size: Duration::from_secs(60),
         }
     }
     
-    pub async fn check_rate_limit(&self, key: &str) -> bool {
-        let mut limits = self.limits.write().await;
-        let now = SystemTime::now();
-        let cutoff = now - self.window;
+    pub async fn check_limit(&self, key: &str) -> bool {
+        let mut store = self.store.write().await;
+        let now = Instant::now();
         
-        let requests = limits.entry(key.to_string()).or_insert_with(Vec::new);
+        let entry = store.entry(key.to_string()).or_insert_with(|| RateLimitEntry {
+            count: 0,
+            window_start: now,
+        });
         
-        // Remove old requests
-        requests.retain(|&time| time > cutoff);
+        // Reset window if expired
+        if now.duration_since(entry.window_start) >= self.window_size {
+            entry.count = 0;
+            entry.window_start = now;
+        }
         
-        if requests.len() >= self.max_requests {
+        if entry.count >= self.requests_per_minute {
             false
         } else {
-            requests.push(now);
+            entry.count += 1;
             true
         }
-    }
-    
-    pub async fn cleanup_old_entries(&self) {
-        let mut limits = self.limits.write().await;
-        let cutoff = SystemTime::now() - self.window;
-        
-        limits.retain(|_, requests| {
-            requests.retain(|&time| time > cutoff);
-            !requests.is_empty()
-        });
     }
 }
