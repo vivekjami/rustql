@@ -1,3 +1,30 @@
+# Rust specific
+/target/
+Cargo.lock
+*.swp
+*.swo
+*~
+.env
+.env.local
+config.local.toml
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.iml
+dist/
+build/
+tmp/
+coverage/
+
+# Backup files
+*.bak
+*.tmp
+*.old
+
+# Runtime files
+*.pid
+*.sock
 # Logs
 logs
 *.log

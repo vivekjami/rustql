@@ -1,0 +1,36 @@
+
+[server]
+host = "0.0.0.0"
+port = 5000
+workers = 4
+max_connections = 1000
+timeout = 30
+
+[cache]
+redis_url = "redis://localhost:6379"
+default_ttl = 300
+max_size = "1GB"
+compression = true
+
+[rate_limiting]
+requests_per_minute = 1000
+burst_size = 50
+algorithm = "sliding_window"
+
+[security]
+cors_origins = ["*"]
+enable_introspection = true
+
+[metrics]
+enabled = true
+prometheus_port = 9090
+tracing_enabled = true
+
+[[apis.rest]]
+name = "jsonplaceholder"
+base_url = "https://jsonplaceholder.typicode.com"
+schema_url = "https://jsonplaceholder.typicode.com/swagger.json"
+
+[[apis.rest]]
+name = "example"
+base_url = "https://api.example.com/v1"

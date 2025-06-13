@@ -1,2 +1,14 @@
 [nix]
 channel = "stable-24_05"
+
+[workflows]
+runButton = "Run RustQL"
+
+[[workflows.workflow]]
+name = "Run RustQL"
+author = 25780535
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cargo run --release"
