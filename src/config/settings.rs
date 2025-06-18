@@ -97,16 +97,16 @@ impl Default for Settings {
 
 impl Settings {
     pub fn load() -> Result<Self, config::ConfigError> {
-        let mut settings = config::Config::builder()
+        let mut builder = config::Config::builder()
             .add_source(config::File::with_name("config").required(false))
-            .add_source(config::Environment::with_prefix("RUSTQL"))
-            .build()?;
+            .add_source(config::Environment::with_prefix("RUSTQL"));
 
         // Override with environment variables
         if let Ok(port) = std::env::var("PORT") {
-            settings.set("server.port", port)?;
+            builder = builder.set_override("server.port", port)?;
         }
 
+        let settings = builder.build()?;
         settings.try_deserialize()
     }
 

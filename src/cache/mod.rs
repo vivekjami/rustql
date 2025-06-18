@@ -8,11 +8,11 @@ impl CacheManager {
         Self
     }
 
-    pub async fn get(&self, key: &str) -> Option<String> {
+    pub async fn get(&self, _key: &str) -> Option<String> {
         None // Placeholder
     }
 
-    pub async fn set(&self, key: &str, value: &str, ttl: u64) -> crate::utils::Result<()> {
+    pub async fn set(&self, _key: &str, _value: &str, _ttl: u64) -> crate::utils::Result<()> {
         Ok(()) // Placeholder
     }
 }

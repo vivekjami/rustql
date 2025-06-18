@@ -32,7 +32,7 @@ impl RestResolver for DynamicResolver {
     #[instrument(skip(self, ctx))]
     async fn resolve_field(&self, ctx: &Context<'_>, field_name: &str) -> Result<serde_json::Value> {
         let _settings = ctx.data::<Arc<Settings>>()
-            .map_err(|e| async_graphql::Error::new(format!("Configuration error: {}", e)))?;
+            .map_err(|e| async_graphql::Error::new(format!("Configuration error: {:?}", e)))?;
 
         info!(
             api_name = %self.api_name,

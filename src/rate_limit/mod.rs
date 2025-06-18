@@ -8,7 +8,7 @@ impl RateLimiter {
         Self
     }
 
-    pub async fn check_rate_limit(&self, key: &str) -> bool {
+    pub async fn check_rate_limit(&self, _key: &str) -> bool {
         true // Placeholder - always allow
     }
 }

@@ -1,4 +1,4 @@
-use rustql::{Result, RustQLError, create_app};
+use rustql::{Result, create_app};
 use tracing::{error, info};
 
 #[tokio::main]

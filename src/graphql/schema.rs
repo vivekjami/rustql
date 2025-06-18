@@ -1,5 +1,5 @@
 use crate::config::Settings;
-use async_graphql::{Context, EmptySubscription, Object, Result, Schema, SimpleObject};
+use async_graphql::{EmptySubscription, Object, Schema, SimpleObject};
 use std::sync::Arc;
 
 pub type RustQLSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;

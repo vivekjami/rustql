@@ -1,5 +1,4 @@
 use crate::config::Settings;
-use crate::utils::RustQLError;
 use serde_json::{Value, json};
 use std::convert::Infallible;
 use std::sync::Arc;
@@ -21,11 +20,11 @@ pub async fn handle_health() -> Result<impl Reply, Rejection> {
     ))
 }
 
-#[instrument(skip(settings, body))]
+#[instrument(skip(_settings, _body))]
 pub async fn handle_graphql(
     request_id: String,
-    settings: Arc<Settings>,
-    body: Value,
+    _settings: Arc<Settings>,
+    _body: Value,
 ) -> Result<impl Reply, Rejection> {
     info!(request_id = %request_id, "Processing GraphQL request");
 

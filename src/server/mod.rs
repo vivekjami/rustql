@@ -4,7 +4,7 @@ use crate::config::Settings;
 use crate::utils::{generate_request_id, Result};
 use std::sync::Arc;
 use tracing::{info, instrument};
-use warp::{Filter, Rejection, Reply};
+use warp::{Filter, Reply};
 
 pub struct Server {
     settings: Arc<Settings>,
@@ -27,7 +27,7 @@ impl Server {
         );
 
         // Build routes
-        let routes = self.build_routes();
+        let routes = build_routes(settings.clone());
 
         // Start server
         let addr: std::net::SocketAddr = format!("{}:{}", settings.server.host, settings.server.port)
@@ -40,64 +40,63 @@ impl Server {
 
         Ok(())
     }
+}
 
-    fn build_routes(&self) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-        let cors = warp::cors()
-            .allow_any_origin()
-            .allow_headers(vec!["content-type", "authorization", "x-request-id"])
-            .allow_methods(vec!["GET", "POST", "OPTIONS"]);
+fn build_routes(settings: Arc<Settings>) -> impl Filter<Extract = impl Reply, Error = std::convert::Infallible> + Clone {
+    let cors = warp::cors()
+        .allow_any_origin()
+        .allow_headers(vec!["content-type", "authorization", "x-request-id"])
+        .allow_methods(vec!["GET", "POST", "OPTIONS"]);
 
-        // Health check endpoint
-        let health = warp::path("health")
-            .and(warp::get())
-            .and_then(handlers::handle_health);
+    // Health check endpoint
+    let health = warp::path("health")
+        .and(warp::get())
+        .and_then(handlers::handle_health);
 
-        // GraphQL endpoint (placeholder for now)
-        let graphql = warp::path("graphql")
-            .and(warp::post())
-            .and(self.with_request_id())
-            .and(self.with_settings())
-            .and(warp::body::json())
-            .and_then(handlers::handle_graphql);
+    // GraphQL endpoint
+    let graphql = warp::path("graphql")
+        .and(warp::post())
+        .and(with_request_id())
+        .and(with_settings(settings.clone()))
+        .and(warp::body::json())
+        .and_then(handlers::handle_graphql);
 
-        // GraphQL playground
-        let playground = warp::path("playground")
-            .and(warp::get())
-            .and_then(handlers::handle_playground);
+    // GraphQL playground
+    let playground = warp::path("playground")
+        .and(warp::get())
+        .and_then(handlers::handle_playground);
 
-        // Metrics endpoint
-        let metrics = warp::path("metrics")
-            .and(warp::get())
-            .and_then(handlers::handle_metrics);
+    // Metrics endpoint
+    let metrics = warp::path("metrics")
+        .and(warp::get())
+        .and_then(handlers::handle_metrics);
 
-        health
-            .or(graphql)
-            .or(playground)
-            .or(metrics)
-            .with(self.with_logging())
-            .with(cors)
-            .recover(handlers::handle_rejection)
-    }
+    health
+        .or(graphql)
+        .or(playground)
+        .or(metrics)
+        .with(with_logging())
+        .with(cors)
+        .recover(handlers::handle_rejection)
+}
 
-    fn with_settings(&self) -> impl Filter<Extract = (Arc<Settings>,), Error = std::convert::Infallible> + Clone {
-        let settings = self.settings.clone();
-        warp::any().map(move || settings.clone())
-    }
+fn with_settings(settings: Arc<Settings>) -> impl Filter<Extract = (Arc<Settings>,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || settings.clone())
+}
 
-    fn with_request_id(&self) -> impl Filter<Extract = (String,), Error = std::convert::Infallible> + Clone {
-        warp::any().map(|| generate_request_id())
-    }
+fn with_request_id() -> impl Filter<Extract = (String,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(|| generate_request_id())
+}
 
-    fn with_logging(&self) -> warp::log::Log<impl Fn(warp::log::Info) + Clone> {
-        warp::log::custom(|info| {
-            info!(
-                method = %info.method(),
-                path = %info.path(),
-                status = %info.status(),
-                elapsed = ?info.elapsed(),
-                remote_addr = ?info.remote_addr(),
-                "HTTP request processed"
-            );
-        })
-    }
+fn with_logging() -> warp::log::Log<impl Fn(warp::log::Info) + Clone> {
+    warp::log::custom(|info| {
+        info!(
+            method = %info.method(),
+            path = %info.path(),
+            status = %info.status(),
+            elapsed = ?info.elapsed(),
+            remote_addr = ?info.remote_addr(),
+            "HTTP request processed"
+        );
+    })
 }

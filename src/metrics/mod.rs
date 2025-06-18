@@ -8,11 +8,11 @@ impl MetricsCollector {
         Self
     }
 
-    pub fn increment_counter(&self, name: &str) {
+    pub fn increment_counter(&self, _name: &str) {
         // Placeholder
     }
 
-    pub fn record_duration(&self, name: &str, duration: std::time::Duration) {
+    pub fn record_duration(&self, _name: &str, _duration: std::time::Duration) {
         // Placeholder
     }
 }
