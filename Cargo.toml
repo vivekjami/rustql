@@ -2,5 +2,9 @@
 name = "rustql"
 version = "0.1.0"
 edition = "2024"
+authors = ["Vivek <j.vivekvamsi@gmail.com>"]
+description = "High-Performance GraphQL-to-REST API Gateway"
+license = "MIT"
+repository = "https://github.com/vivekjami/rustql"
 
 [dependencies]
