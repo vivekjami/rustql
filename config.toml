@@ -1,0 +1,42 @@
+[server]
+host = "0.0.0.0"
+port = 8080
+workers = 4
+max_connections = 1000
+request_timeout = 30
+enable_playground = true
+cors_origins = ["*"]
+
+[cache]
+redis_url = "redis://localhost:6379"
+default_ttl = 300
+max_size = "1GB"
+enable_compression = true
+
+[rate_limiting]
+requests_per_minute = 1000
+burst_size = 50
+enable_per_ip = true
+
+[monitoring]
+enable_metrics = true
+enable_tracing = true
+metrics_port = 9090
+log_level = "info"
+
+# Example REST API configurations
+[[apis.rest]]
+name = "jsonplaceholder"
+base_url = "https://jsonplaceholder.typicode.com"
+schema_url = "https://jsonplaceholder.typicode.com/swagger.json"
+
+[apis.rest.headers]
+"User-Agent" = "RustQL/1.0"
+
+[[apis.rest]]
+name = "example"
+base_url = "https://api.example.com/v1"
+
+[apis.rest.headers]
+"Authorization" = "Bearer ${API_KEY}"
+"Content-Type" = "application/json"
